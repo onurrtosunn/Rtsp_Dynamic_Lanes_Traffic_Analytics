@@ -23,9 +23,12 @@ class YOLODetection:
         """
         Load the YOLO model.
         """
-        self.model = torch.load(self.model_name, map_location=torch.device(0)) if isinstance(self.model_name, str) else self.model_name
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+        self.model = torch.load(self.model_name, map_location=device) if isinstance(self.model_name, str) else self.model_name
         if isinstance(self.model, dict):
             self.model = self.model['ema' if self.model.get('ema') else 'model']
+
         hub_model = Model(self.model.yaml).to(next(self.model.parameters()).device)
         hub_model.load_state_dict(self.model.float().state_dict())
         self.loaded_model = hub_model.autoshape()
@@ -36,7 +39,7 @@ class YOLODetection:
         """
         self.cap = cv2.VideoCapture(video_source)
 
-    def yolo_inference_and_drawer(self, video_filename="Traffic.mp4", video_path=os.getcwd()):
+    def yolo_inference_and_drawer(self, output_rtsp_url, video_filename="Traffic.mp4", video_path=os.getcwd()):
         """
         Read frames from a video file and perform YOLO inference on each frame.
         """
@@ -50,7 +53,7 @@ class YOLODetection:
             return
 
         self.get_video_properties(self.cap)
-        video_writer, output_path = self.initialize_video_writer(video_path)
+        video_writer = self.initialize_rtsp_writer(output_rtsp_url)
 
         while True:
             ret, frame = self.cap.read()
@@ -75,17 +78,16 @@ class YOLODetection:
         self.width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    def initialize_video_writer(self, video_path):
+    def initialize_rtsp_writer(self, output_rtsp_url):
         """
-        Initialize the video writer.
+        Initialize the RTSP writer.
         """
-        output_path = join(dirname(video_path), f"{splitext(basename(video_path))[0]}_output.mp4")
-        video_writer = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc(*'mp4v'), self.fps, (self.width, self.height))
-        return video_writer, output_path
+        video_writer = cv2.VideoWriter(output_rtsp_url, cv2.VideoWriter_fourcc(*'X264'), self.fps, (self.width, self.height))
+        return video_writer
 
     def save_video(self, cap, video_writer):
         """
-        Release the video capture and writer, and rename the output file.
+        Release the video capture and writer.
         """
         cap.release()
         video_writer.release()
@@ -105,7 +107,7 @@ class YOLODetection:
             if conf >= confidence_threshold:
                 class_name = self.model.names[int(class_id)]
                 x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])
-                if fg_mask[y1:y2, x1:x2].mean() > 15:  # Adjust the threshold value as needed
+                if fg_mask[y1:y2, x1:x2].mean() > 35:  # Adjust the threshold value as needed
                     detection_results.append([class_name, x1, y1, x2, y2, conf, True])  # Mark as moving
                 else:
                     detection_results.append([class_name, x1, y1, x2, y2, conf, False])  # Mark as not moving
@@ -139,11 +141,11 @@ class YOLODetection:
         cv2.rectangle(img, c1, c2, bbox_color, thickness=1, lineType=cv2.LINE_AA)
         cv2.putText(img, label, text_position, cv2.FONT_HERSHEY_SIMPLEX, 0.3, text_color, 1)
 
-
 # Kullanım örneği
 model_name = 'yolov7.pt'
-video_source = 'Traffic.mp4'
+video_source = 'rtsp://localhost:9090/mystream'
+output_rtsp_url = 'rtsp://localhost:8554/mystream'
 
 yolo_detector = YOLODetection(model_name)
 yolo_detector.load_video(video_source)
-yolo_detector.yolo_inference_and_drawer()
+yolo_detector.yolo_inference_and_drawer(output_rtsp_url)
