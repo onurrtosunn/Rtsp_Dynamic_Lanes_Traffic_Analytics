@@ -12,14 +12,15 @@ class VideoURLFinder:
     def get_video_url(self):
         response = requests.get(self.video_api_url)
         if response.status_code == 200:
-            return response.json()['video_url']
+            return response.json().get('video_url')
         else:
             return None
     
     def get_variable(self):
         response = requests.get(self.variable_url)
         if response.status_code == 200:
-            return response.json()['variable']
+            data = response.json()
+            return data.get('config') 
         else:
             return None
 
@@ -33,7 +34,8 @@ class VideoProcessor:
         while True:
             new_video_url = self.video_source_url_finder.get_video_url()
             variable = self.video_source_url_finder.get_variable()
-
+            print(new_video_url)
+            print(variable)
             if not new_video_url:
                 print("Failed to retrieve video URL!")
                 break
@@ -68,7 +70,7 @@ class VideoProcessor:
 
 if __name__ == "__main__":
     api_url = 'http://127.0.0.1:5001/get_video_url'
-    variable_url = 'http://127.0.0.1:5001/get_variable'
+    variable_url = 'http://127.0.0.1:5001/get_config'
     video_source_url_finder = VideoURLFinder(api_url, variable_url)
     processor = VideoProcessor(video_source_url_finder)
     processor.main()
