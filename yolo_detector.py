@@ -27,23 +27,49 @@ class YOLODetection:
         hub_model.load_state_dict(self.model.float().state_dict())
         self.loaded_model = hub_model.autoshape()
 
-    def yolo_inference_and_drawer(self, cap, video_filename, video_path):
+    def load_video(self, video_source):
+        """ 
+        Load video from RTSP stream
+        """
+        self.cap = cv2.VideoCapture(video_source)
+
+    def yolo_inference_and_drawer(self, rtsp_url):
         """
         Read frames from a video file and perform YOLO inference on each frame.
         """
+        import subprocess as sp
         self.detection_results_total = []
-        self.video_filename = video_filename
-        video_path = join(video_path, video_filename)
+        ffplay_process = sp.Popen(['ffplay', '-rtsp_flags', 'listen', rtsp_url])  # Use FFplay sub-process for receiving the RTSP video.
 
-        if not cap.isOpened():
+
+        if not self.cap.isOpened():
             print("Could not open the video file")
             return
         
-        self.get_video_properties(cap)
-        video_writer, output_path = self.initialize_video_writer(video_path)
+        self.get_video_properties(self.cap)
+
+        #video_writer, output_path = self.initialize_video_writer(video_path)
+        command = ['ffmpeg',
+           '-re',
+           '-y',
+           '-f', 'rawvideo',
+           '-vcodec', 'rawvideo',
+           '-pix_fmt', 'bgr24',
+           '-s', "{}x{}".format(self.width, self.height),
+           '-r', str(self.fps),
+           '-i', '-',
+           '-c:v', 'libx264',
+           '-preset', 'ultrafast',
+           '-f', 'rtsp',
+           #'-flags', 'local_headers', 
+           '-rtsp_transport', 'tcp',
+           '-muxdelay', '0.1',
+           '-bsf:v', 'dump_extra',
+           rtsp_url]
+        p = sp.Popen(command, stdin=sp.PIPE)
 
         while True:
-            ret, frame = cap.read()
+            ret, frame = self.cap.read()
             if not ret:
                 break
             
@@ -51,9 +77,13 @@ class YOLODetection:
             if frame_detections:
                 self.detection_results_total.extend(frame_detections)
                 self.draw_detections(frame, frame_detections)
-            video_writer.write(frame)
+                p.stdin.write(frame.tobytes())
+            #video_writer.write(frame)
 
-        self.save_video(cap, video_writer, video_path, output_path)
+        p.stdin.close()  # Close stdin pipe
+        p.wait()  # Wait for FFmpeg sub-process to finish
+        ffplay_process.kill() 
+        #self.save_video(cap, video_writer, video_path, output_path)
         return self.detection_results_total
 
     def get_video_properties(self, cap):
@@ -124,3 +154,12 @@ class YOLODetection:
         cv2.rectangle(img, (c1[0], c1[1] - text_size[1] - 3), (c1[0] + text_size[0], c1[1] - 2), background_color, -1)
         cv2.rectangle(img, c1, c2, bbox_color, thickness=1, lineType=cv2.LINE_AA)
         cv2.putText(img, label, text_position, cv2.FONT_HERSHEY_SIMPLEX, 0.3, text_color, 1)
+
+# Kullanım örneği
+model_name = 'yolov7.pt'
+video_source = 'rtsp://localhost:9090/mystream'
+output_rtsp_url = 'rtsp://localhost:31415/live.stream'
+
+yolo_detector = YOLODetection(model_name)
+yolo_detector.load_video(video_source)
+yolo_detector.yolo_inference_and_drawer(output_rtsp_url)
