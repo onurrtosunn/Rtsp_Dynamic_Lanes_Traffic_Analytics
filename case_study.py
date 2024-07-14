@@ -82,7 +82,7 @@ class YOLODetection:
         """
         Initialize the RTSP writer.
         """
-        video_writer = cv2.VideoWriter(output_rtsp_url, cv2.VideoWriter_fourcc(*'X264'), self.fps, (self.width, self.height))
+        video_writer = cv2.VideoWriter(output_rtsp_url, cv2.VideoWriter_fourcc(*'mp4v'), self.fps, (self.width, self.height))
         return video_writer
 
     def save_video(self, cap, video_writer):
@@ -143,8 +143,8 @@ class YOLODetection:
 
 # Kullanım örneği
 model_name = 'yolov7.pt'
-video_source = 'rtsp://localhost:9090/mystream'
-output_rtsp_url = 'rtsp://localhost:8554/mystream'
+video_source = 'Traffic.mp4'
+output_rtsp_url = 'output.mp4'
 
 yolo_detector = YOLODetection(model_name)
 yolo_detector.load_video(video_source)
