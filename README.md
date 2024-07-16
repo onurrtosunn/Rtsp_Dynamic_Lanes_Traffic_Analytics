@@ -60,6 +60,13 @@ curl -X PUT http://127.0.0.1:5001/update_video_url -H "Content-Type: application
 - Sort algorith is used to track each objecet 
 - Vehicle counts, stops and wrong-way vehicle information are sent immediately to the endpoint.
 - A demo version of the video has been uploaded to github repo
+- Parallel stream analysis is not supported by the code.
+
+## Docker
+
+```bash
+docker run --rm --name ayvos -it -p 9090:9090 -p 8555:8555 -p 8000:8000/udp -p 8001:8001/udp -p 1935:1935 -p 8888:8888 onurrtosunn/ayvos_case_study:v1
+```
 
 ## Screenshots
 ![image](https://github.com/user-attachments/assets/185924a7-2023-4757-87cf-c8966fc16e18)
