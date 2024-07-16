@@ -64,8 +64,10 @@ curl -X PUT http://127.0.0.1:5001/update_video_url -H "Content-Type: application
 
 ## Docker
 
+
 ```bash
-docker run --rm --name ayvos -it -p 9090:9090 -p 8555:8555 -p 8000:8000/udp -p 8001:8001/udp -p 1935:1935 -p 8888:8888 onurrtosunn/ayvos_case_study:v1
+docker run --rm --name ayvos -it -p 9090:9090 -p 8555:8555 -p 8000:8000/udp -p 8001:8001/udp -p 1935:1935 -p 8888:8888 -w /Ayvos/ -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix onurrtosunn/ayvos_case_study:v1
+
 ```
 
 ## Screenshots
