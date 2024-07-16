@@ -5,7 +5,7 @@
 ```bash
 
 ./rtsp-simple-server
-ffmpeg -re -stream_loop -1 -i Traffic.mp4 -f rtsp -rtsp_transport tcp rtsp://localhost:9090/mystream
+ffmpeg -re -stream_loop -1 -i Traffic.mp4 -c:v libx264 -preset ultrafast -tune zerolatency -g 30 -keyint_min 30 -f rtsp -rtsp_transport tcp rtsp://localhost:9090/mystream
 ```
 
 ## Run Python Files
@@ -21,11 +21,42 @@ python3 vehicle_counter.py
 
 Default configurations are specified in flask_api.py. if you want to make changes with config you can use the following command
 
+### To change lanes information
 ```bash
 
-curl -X PUT http://127.0.0.1:5001/update_config -H "Content-Type: application/json" -d '{"example_key":example_value, "example_key_2":example_value_2}'
+curl -X PUT http://127.0.0.1:5001/update_config  -H "Content-Type: application/json"  -d '{"lane_index": {selected_lane}, "key": "{selected_line}", "value": [{x_value}, {y_value}]}'
 
 ```
+#### For example
+
+```bash
+curl -X PUT http://127.0.0.1:5001/update_config  -H "Content-Type: application/json"  -d '{"lane_index": 5, "key": "line_1_start", "value": [830, 446]}'
+```
+
+### To change rtsp source
+```bash
+curl -X PUT http://127.0.0.1:5001/update_video_url -H "Content-Type: application/json" -d '{"new_url":"{new_rtsp stream or video path}"}'
+```
+#### For example
+
+```bash
+curl -X PUT http://127.0.0.1:5001/update_video_url -H "Content-Type: application/json" -d '{"new_url":"rtsp://localhost:9090/mystream"}'
+```
+
+## RTSP open ports
+- [RTSP] UDP/RTP listener opened on :8000
+
+- [RTSP] UDP/RTCP listener opened on :8001
+
+- [RTSP] TCP listener opened on :9090
+
+- [RTMP] listener opened on :1935
+
+- [HLS] listener opened on :8888
+
+## Notes 
+- Stopped objects are coloured with a red frame
+- Vehicle counts, stops and wrong-way vehicle information are sent immediately to the endpoint.
 
 ## Reference 
 
