@@ -55,8 +55,15 @@ curl -X PUT http://127.0.0.1:5001/update_video_url -H "Content-Type: application
 - [HLS] listener opened on :8888
 
 ## Notes 
-- Stopped objects are coloured with a red frame
+- Stopped objects are coloured with a red rectangle and a threshold value is used to prevent false positives.
+- createBackgroundSubtractorMOG2 algorithm is used to detect non-moving objects
+- Sort algorith is used to track each objecet 
 - Vehicle counts, stops and wrong-way vehicle information are sent immediately to the endpoint.
+- A demo version of the video has been uploaded to github repo
+
+## Screenshots
+![image](https://github.com/user-attachments/assets/185924a7-2023-4757-87cf-c8966fc16e18)
+![image](https://github.com/user-attachments/assets/fbe3a8ab-cfbe-4baa-9e2c-dc4667f03be1)
 
 ## Reference 
 
