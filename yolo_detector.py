@@ -6,12 +6,10 @@ from collections import defaultdict
 
 class YOLODetection:
     def __init__(self):
-        self.stopped_threshold = 3
-        self.background_color = (0, 0, 0)
-        self.text_color = (255, 255, 255)
-        self.stopped_objects = defaultdict(int)  
+         
         self.initialize_background_subtraction()
         self.initialize_sort_tracker()
+        self.stopped_objects = defaultdict(int)
 
     def initialize_background_subtraction(self):
 
@@ -29,7 +27,7 @@ class YOLODetection:
         fg_mask = self.back_sub.apply(frame)
         return self.analyzer(fg_mask, detection_result)
 
-    def analyzer(self, fg_mask, detection_result, confidence_threshold=0.40):
+    def analyzer(self, fg_mask, detection_result, confidence_threshold=0.51):
 
         detections_to_sort = []
         for obj in detection_result:
@@ -51,35 +49,6 @@ class YOLODetection:
         detections_to_sort = np.array(detections_to_sort)
         return detections_to_sort
 
-    def draw_detections(self, frame, detections):
-
-        bbox_xyxy = detections[:, :4]
-        obj_ids = detections[:, -1].astype(int)
-        class_ids = detections[:, 4].astype(int)
-
-        self.draw_rectangle_to_image(frame, bbox_xyxy, obj_ids, class_ids)
-
-    def draw_rectangle_to_image(self, img, bbox, obj_ids, class_ids, line_thickness=3):
-
-        for bbox, obj_id, class_id in zip(bbox, obj_ids, class_ids):
-            x1, y1, x2, y2 = [int(i) for i in bbox]
-
-            label = f"ID: {obj_id} - Class: {self.model.names[class_id]}"
-            text_size, _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.3, line_thickness)
-            text_position = (x1, y1 - 2)
-
-            obj_coords = (x1, y1, x2, y2)
-            if self.stopped_objects.get(obj_coords, 0) >= self.stopped_threshold:
-                bbox_color = (0, 0, 255)  
-            else:
-                bbox_color = (0, 255, 0) 
-
-            cv2.rectangle(img, (x1, y1 - text_size[1] - 3), (x1 + text_size[0], y1 - 2), self.background_color, -1)
-            cv2.rectangle(img, (x1, y1), (x2, y2), bbox_color, thickness=1, lineType=cv2.LINE_AA)
-            cv2.putText(img, label, text_position, cv2.FONT_HERSHEY_SIMPLEX, 0.3, self.text_color, 1)
-            cv2.imshow('frame', img)
-            cv2.waitKey(1)
-
     def track_objects_with_sort(self, detections):
         
         return self.sort_tracker.update(detections)
@@ -90,5 +59,10 @@ class YOLODetection:
         detections = self.perform_inference(frame, loaded_model)
         tracked_detections = self.track_objects_with_sort(detections)
         if len(tracked_detections) > 0:
-            self.draw_detections(frame, tracked_detections)
-            
+            self.parse_drawing_information(tracked_detections)
+
+    def parse_drawing_information(self, detections):
+
+        self.bbox_xyxy = detections[:, :4]
+        self.obj_ids = detections[:, -1].astype(int)
+        self.class_ids = detections[:, 4].astype(int)
