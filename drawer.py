@@ -7,7 +7,7 @@ from collections import defaultdict
 class Drawer:
     def __init__(self):
         
-        self.stopped_threshold = 3
+        self.stopped_threshold = 2
         self.background_color = (0, 0, 0)
         self.text_color = (255, 255, 255)
         self.stopped_objects = defaultdict(int) 
@@ -37,7 +37,7 @@ class Drawer:
     def send_stopped_object(self, obj_id):
 
         try:
-            text = f"{obj_id} Stopped !"
+            text = f"Object ID: {obj_id} Stopped !"
             response = requests.put("http://127.0.0.1:5001/send_stopped_object", json=text)
 
             if response.status_code == 200:
@@ -46,8 +46,3 @@ class Drawer:
                 print(f"Failed to send data. Status code: {response.status_code}")
         except requests.RequestException as e:
             print(f"Error sending data: {e}")
-
-
-
-
-            

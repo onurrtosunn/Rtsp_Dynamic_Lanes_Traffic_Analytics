@@ -51,16 +51,16 @@ class ZoneManager:
     def draw_line(self, frame):
 
         for lane in self.lanes:
-            cv2.line(frame, lane["line_1_start"], lane["line_1_end"], (0, 0, 255), 5)
-            cv2.line(frame, lane["line_2_start"], lane["line_2_end"], (0, 255, 0), 5)
+            cv2.line(frame, lane["line_1_start"], lane["line_1_end"], (0, 0, 255), 4)
+            cv2.line(frame, lane["line_2_start"], lane["line_2_end"], (0, 255, 0), 4)
         cv2.imshow('frame', frame)
         cv2.waitKey(1)
 
     def draw_center_point(self, frame, center_x, center_y):
 
-        cv2.circle(frame, (center_x, center_y), 6, (0, 0, 255), -1)
+        cv2.circle(frame, (center_x, center_y), 3, (0, 0, 255), -1)
 
-    def zone_counter(self, frame, bboxes, object_ids):
+    def analyze_object_movement(self, frame, bboxes, object_ids):
 
         for bbox, object_id in zip(bboxes, object_ids):
             center_x, center_y = self.find_object_center(bbox)
@@ -87,7 +87,7 @@ class ZoneManager:
     def send_wrong_direction_detection(self, object_id, lane_index):
 
         try:
-            text = f"Object ID {object_id} - Lane {lane_index + 1}"
+            text = f"Object ID {object_id} - Lane {lane_index + 1} Wrong Direction !"
             response = requests.put("http://127.0.0.1:5001/send_wrong_direction_object", json=text)
 
             if response.status_code == 200:
@@ -265,8 +265,8 @@ class VideoProcessor:
             
             self.get_video_properties()
             self.zone_manager.lanes_info(lanes)
-            self.yolo_detector.stream_video_with_detections_and_tracker(frame, self.loaded_model, self.model)
-            self.zone_manager.zone_counter(frame, self.yolo_detector.bbox_xyxy, self.yolo_detector.obj_ids)
+            self.yolo_detector.detections_and_tracker(frame, self.loaded_model, self.model)
+            self.zone_manager.analyze_object_movement(frame, self.yolo_detector.bbox_xyxy, self.yolo_detector.obj_ids)
             frame = self.drawer.draw_rectangle_to_image(frame, self.yolo_detector.bbox_xyxy, self.yolo_detector.obj_ids, self.yolo_detector.class_ids, self.model, self.yolo_detector.stopped_objects)
             self.zone_manager.draw_line(frame)
             zone_manager.send_lane_counts()

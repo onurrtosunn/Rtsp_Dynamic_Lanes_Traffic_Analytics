@@ -53,7 +53,7 @@ class YOLODetection:
         
         return self.sort_tracker.update(detections)
 
-    def stream_video_with_detections_and_tracker(self,frame, loaded_model, model):
+    def detections_and_tracker(self,frame, loaded_model, model):
 
         self.model = model
         detections = self.perform_inference(frame, loaded_model)
