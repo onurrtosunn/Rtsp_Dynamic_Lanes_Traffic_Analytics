@@ -1,4 +1,6 @@
-# Ayvos Case Study Usage
+# Real-time RTSP-based dynamic traffic analytics service 
+
+Real-time RTSP-based traffic analytics service that detects vehicles, performs lane-level counting, identifies stopped and wrong-way vehicles, provides a REST API for dynamic configuration of lanes/counting regions and camera sources with immediate on-stream updates, converts uploaded videos to RTSP for analysis, emits per-minute counts and instant alarms to an external service, and is designed to support parallel stream analysis.
 
 ## Create RTSP Stream
 
@@ -77,3 +79,4 @@ docker run --rm --name ayvos -it -p 9090:9090 -p 8555:8555 -p 8000:8000/udp -p 8
 ## Reference 
 
 https://github.com/bluenviron/mediamtx
+
